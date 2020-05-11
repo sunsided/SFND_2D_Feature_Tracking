@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <deque>
 #include <vector>
 #include <cmath>
 #include <limits>
@@ -35,9 +36,9 @@ int main(int argc, const char *argv[]) {
     int imgFillWidth = 4;  // no. of digits which make up the file index (e.g. img-0001.png)
 
     // misc
-    int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
-    vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
-    bool bVis = false;            // visualize results
+    constexpr int dataBufferSize = 2;   // no. of images which are held in memory (ring buffer) at the same time
+    std::deque<DataFrame> dataBuffer{}; // list of data frames which are held in memory at the same time
+    bool bVis = false;                  // visualize results
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -60,6 +61,10 @@ int main(int argc, const char *argv[]) {
         // push image into data frame buffer
         DataFrame frame;
         frame.cameraImg = imgGray;
+        if (dataBuffer.size() == dataBufferSize)
+        {
+            dataBuffer.pop_front();
+        }
         dataBuffer.push_back(frame);
 
         //// EOF STUDENT ASSIGNMENT

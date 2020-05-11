@@ -66,9 +66,9 @@ namespace {
             return createAkazeDetector();
         } else if (detectorType == "SIFT") {
             return createSiftDetector();
-        } else {
-            return nullptr;  // ... or throw.
         }
+
+        return nullptr;
     }
 
 }
@@ -125,13 +125,39 @@ namespace {
             return createAkazeDescriptorExtractor();
         } else if (detectorType == "SIFT") {
             return createSiftDescriptorExtractor();
-        } else {
-            return nullptr;  // ... or throw.
         }
+
+        return nullptr;
     }
 
 }
 
+namespace {
+
+    cv::Ptr<cv::DescriptorMatcher> createBruteForceMatcher(bool crossCheck, bool isBinaryDescriptor) {
+        const auto normType = isBinaryDescriptor ? cv::NORM_HAMMING : cv::NORM_L2SQR;
+        return cv::BFMatcher::create(normType, crossCheck);
+    }
+
+    cv::Ptr<cv::DescriptorMatcher> createFlannBasedMatcher(bool isBinaryDescriptor) {
+        if (isBinaryDescriptor) {
+            return new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2));
+        } else {
+            return cv::FlannBasedMatcher::create();
+        }
+    }
+
+    cv::Ptr<cv::DescriptorMatcher> createDescriptorMatcher(const std::string &matcherType, bool crossCheck, bool isBinaryDescriptor) {
+        if (matcherType == "MAT_BF") {
+            return createBruteForceMatcher(crossCheck, isBinaryDescriptor);
+        } else if (matcherType == "MAT_FLANN") {
+            return createFlannBasedMatcher(isBinaryDescriptor);
+        }
+
+        return nullptr;
+    }
+
+}
 
 // Find best matches for keypoints in two camera images based on several matching methods
 void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::KeyPoint> &kPtsRef,
@@ -139,19 +165,12 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
                       const std::string &descriptorType, const std::string &matcherType,
                       const std::string &selectorType) {
     // configure matcher
-    bool crossCheck = false;
-    cv::Ptr<cv::DescriptorMatcher> matcher;
-
-    if (matcherType == "MAT_BF") {
-        int normType = cv::NORM_HAMMING;
-        matcher = cv::BFMatcher::create(normType, crossCheck);
-    } else if (matcherType == "MAT_FLANN") {
-        // ...
-    }
+    const auto crossCheck = false;
+    const auto isBinaryDescriptor = descriptorType == "DES_BINARY";
+    const auto matcher = createDescriptorMatcher(matcherType, crossCheck, isBinaryDescriptor);
 
     // perform matching task
     if (selectorType == "SEL_NN") { // nearest neighbor (best match)
-
         matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
     } else if (selectorType == "SEL_KNN") { // k nearest neighbors (k=2)
 

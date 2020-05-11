@@ -51,7 +51,7 @@ void descKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
-void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis) {
+void detectKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis) {
     // compute detector parameters based on image size
     int blockSize = 4;       //  size of an average block for computing a derivative covariation matrix over each pixel neighborhood
     double maxOverlap = 0.0; // max. permissible overlap between two features in %
@@ -89,7 +89,7 @@ void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, b
     }
 }
 
-void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis)
+void detectKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis)
 {
     auto t = (double)cv::getTickCount();
 
@@ -104,6 +104,9 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
 
     cv::Mat norm, normScaled;
     cv::normalize(dst, norm, 0, 1.0F, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
+
+    // Adjust for visualization.
+    convertScaleAbs(norm, normScaled);
 
     // To apply non-maxima suppression, we march over every pixel and determine the
     // detector response at each location. For each nontrivial response we first
@@ -165,6 +168,95 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
     }
 }
 
-void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, const std::string& detectorType, bool bVis) {
-    assert(false);
+cv::Ptr<cv::FeatureDetector> createFastDetector() {
+    const auto threshold = 30;
+    const auto nonmaxSuppression = true;
+    const auto type = cv::FastFeatureDetector::TYPE_9_16;
+    return cv::FastFeatureDetector::create(threshold, nonmaxSuppression, type);
+}
+
+cv::Ptr<cv::FeatureDetector> createBriskDetector() {
+    const auto threshold = 30;
+    const auto octaves = 3;
+    const auto patternScale = 1.0F;
+    return cv::BRISK::create(threshold, octaves, patternScale);
+}
+
+cv::Ptr<cv::FeatureDetector> createOrbDetector() {
+    // https://docs.opencv.org/3.4/db/d95/classcv_1_1ORB.html
+    const auto numFeatures = 500;
+    const float scaleFactor = 1.2F;
+    const auto numLevels = 8;
+    const auto edgeThreshold = 31;
+    const auto firstLevel = 0;
+    const auto WTA_K = 2;
+    const auto scoreType = cv::ORB::HARRIS_SCORE;
+    const auto patchSize = 31;
+    const auto fastThreshold = 20;
+    return cv::ORB::create(numFeatures, scaleFactor, numLevels, edgeThreshold, firstLevel, WTA_K, scoreType, patchSize, fastThreshold);
+}
+
+cv::Ptr<cv::FeatureDetector> createAkazeDetector() {
+    const auto descriptorType = cv::AKAZE::DESCRIPTOR_MLDB;
+    const auto descriptorSize = 0;
+    const auto descriptorChannels = 3;
+    const auto threshold = 0.001f;
+    const auto numOctaves = 4;
+    const auto numOctaveLayers = 4;
+    const auto diffusivity = cv::KAZE::DIFF_PM_G2;
+    return cv::AKAZE::create(descriptorType, descriptorSize, descriptorChannels,
+                             threshold, numOctaves, numOctaveLayers, diffusivity);
+}
+
+cv::Ptr<cv::FeatureDetector> createSiftDetector() {
+    const auto numFeatures = 0;
+    const auto numOctaveLayers = 3;
+    const auto contrastThreshold = 0.04;
+    const auto edgeThreshold = 10;
+    const auto sigma = 1.6;
+    return cv::xfeatures2d::SIFT::create(numFeatures, numOctaveLayers, contrastThreshold, edgeThreshold, sigma);
+}
+
+cv::Ptr<cv::FeatureDetector> createDetector(const std::string& detectorType) {
+    if (detectorType == "FAST") {
+        return createFastDetector();
+    }
+    else if (detectorType == "BRISK") {
+        return createBriskDetector();
+    }
+    else if (detectorType == "ORB") {
+        return createOrbDetector();
+    }
+    else if (detectorType == "AKAZE") {
+        return createAkazeDetector();
+    }
+    else if (detectorType == "SIFT") {
+        return createSiftDetector();
+    }
+    else
+    {
+        return nullptr;  // ... or throw.
+    }
+}
+
+void detectKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, const std::string& detectorType, bool bVis) {
+    const auto detector = createDetector(detectorType);
+    assert(detector != nullptr);
+
+    auto t = (double)cv::getTickCount();
+    detector->detect(img, keypoints);
+
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    std::cout << detectorType + " detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
+
+    if (bVis)
+    {
+        cv::Mat visImage = img.clone();
+        cv::drawKeypoints(img, keypoints, visImage, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+        const auto windowName = detectorType + " detector results";
+
+        cv::namedWindow(windowName);
+        imshow(windowName, visImage);
+        cv::waitKey(0);
+    }
 }

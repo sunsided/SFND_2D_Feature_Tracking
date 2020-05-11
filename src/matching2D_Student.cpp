@@ -161,8 +161,8 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
 
 
 // Use one of several types of state-of-art descriptors to uniquely identify keypoints
-void descKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descriptors,
-                   const std::string &descriptorType) {
+void describeKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descriptors,
+                       const std::string &descriptorType) {
     const auto extractor = createDescriptorExtractor(descriptorType);
     assert(extractor != nullptr);
 

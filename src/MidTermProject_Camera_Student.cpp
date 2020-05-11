@@ -6,10 +6,30 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d.hpp>
+#include <numeric>
 
 #include "dataStructures.h"
 #include "matching2D.hpp"
 
+namespace {
+
+    void printNeighbourhoodStats(std::vector<cv::KeyPoint> &keypoints) {
+        auto add_size = [](float sum, const cv::KeyPoint &kp) {
+            return sum + kp.size;
+        };
+        const auto mean = std::accumulate(keypoints.begin(), keypoints.end(), 0.0F, add_size) / keypoints.size();
+
+        auto add_square = [mean](float sum, const cv::KeyPoint &kp) {
+            const auto d = kp.size - mean;
+            return sum + d * d;
+        };
+        const auto total = std::accumulate(keypoints.begin(), keypoints.end(), 0.0F, add_square);
+        const auto standardDeviation = total / keypoints.size();
+
+        std::cout << "Neighbourhood size is " << mean << " +/- " << standardDeviation
+                  << " for " << keypoints.size() << " keypoints." << std::endl;
+    }
+}
 
 /* MAIN PROGRAM */
 int main(int argc, const char *argv[]) {
@@ -53,20 +73,19 @@ int main(int argc, const char *argv[]) {
         // push image into data frame buffer
         DataFrame frame;
         frame.cameraImg = imgGray;
-        if (dataBuffer.size() == dataBufferSize)
-        {
+        if (dataBuffer.size() == dataBufferSize) {
             dataBuffer.pop_front();
         }
         dataBuffer.push_back(frame);
 
         //// EOF STUDENT ASSIGNMENT
-        std::cout << "#1 : LOAD IMAGE INTO BUFFER done" << std::endl;
+        std::cout << "#1 : LOAD IMAGE INTO BUFFER done" << std::endl << std::endl;
 
         /* DETECT IMAGE KEYPOINTS */
 
         // extract 2D keypoints from current image
         std::vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        std::string detectorType = "SHITOMASI";
+        std::string detectorType = "AKAZE";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
@@ -74,13 +93,9 @@ int main(int argc, const char *argv[]) {
 
         if (detectorType == "SHITOMASI") {
             detectKeypointsShiTomasi(keypoints, imgGray, false);
-        }
-        else if (detectorType == "HARRIS")
-        {
+        } else if (detectorType == "HARRIS") {
             detectKeypointsHarris(keypoints, imgGray, bVis);
-        }
-        else
-        {
+        } else {
             detectKeypointsModern(keypoints, imgGray, detectorType, bVis);
         }
         //// EOF STUDENT ASSIGNMENT
@@ -96,19 +111,21 @@ int main(int argc, const char *argv[]) {
         if (bFocusOnVehicle) {
             const auto numKeypointsBefore = keypoints.size();
             const auto position = std::remove_if(keypoints.begin(), keypoints.end(),
-                    [&vehicleRect](const cv::KeyPoint & kp) {
-                        return !vehicleRect.contains(kp.pt);
-                    });
+                                                 [&vehicleRect](const cv::KeyPoint &kp) {
+                                                     return !vehicleRect.contains(kp.pt);
+                                                 });
             keypoints.erase(position, keypoints.end());
 
             const auto numKeypointsAfter = keypoints.size();
             std::cout << "Keeping " << numKeypointsAfter << " / " << numKeypointsBefore << " keypoints" << std::endl;
         }
 
+        printNeighbourhoodStats(keypoints);
+
         //// EOF STUDENT ASSIGNMENT
 
         // optional : limit number of keypoints (helpful for debugging and learning)
-        bool bLimitKpts = false;
+        const auto bLimitKpts = false;
         if (bLimitKpts) {
             int maxKeypoints = 50;
 
@@ -122,7 +139,7 @@ int main(int argc, const char *argv[]) {
 
         // push keypoints and descriptor for current frame to end of data buffer
         (dataBuffer.end() - 1)->keypoints = keypoints;
-        std::cout << "#2 : DETECT KEYPOINTS done" << std::endl;
+        std::cout << "#2 : DETECT KEYPOINTS done" << std::endl << std::endl;
 
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
@@ -140,7 +157,7 @@ int main(int argc, const char *argv[]) {
         // push descriptors for current frame to end of data buffer
         (dataBuffer.end() - 1)->descriptors = descriptors;
 
-        std::cout << "#3 : EXTRACT DESCRIPTORS done" << std::endl;
+        std::cout << "#3 : EXTRACT DESCRIPTORS done" << std::endl << std::endl;
 
         if (dataBuffer.size() > 1) // wait until at least two images have been processed
         {
@@ -165,7 +182,7 @@ int main(int argc, const char *argv[]) {
             // store matches in current data frame
             (dataBuffer.end() - 1)->kptMatches = matches;
 
-            std::cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << std::endl;
+            std::cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << std::endl << std::endl;
 
             // visualize matches between current and previous image
             bVis = true;
@@ -184,7 +201,7 @@ int main(int argc, const char *argv[]) {
                 std::string windowName = "Matching keypoints between two camera images";
                 cv::namedWindow(windowName, 7);
                 cv::imshow(windowName, matchImg);
-                std::cout << "Press key to continue to next image" << std::endl;
+                std::cout << "Press key to continue to next image" << std::endl << std::endl << std::endl;
                 cv::waitKey(0); // wait for key to be pressed
             }
             bVis = false;

@@ -1,4 +1,3 @@
-#include <numeric>
 #include "matching2D.hpp"
 
 
@@ -147,7 +146,8 @@ namespace {
         }
     }
 
-    cv::Ptr<cv::DescriptorMatcher> createDescriptorMatcher(const std::string &matcherType, bool crossCheck, bool isBinaryDescriptor) {
+    cv::Ptr<cv::DescriptorMatcher>
+    createDescriptorMatcher(const std::string &matcherType, bool crossCheck, bool isBinaryDescriptor) {
         if (matcherType == "MAT_BF") {
             return createBruteForceMatcher(crossCheck, isBinaryDescriptor);
         } else if (matcherType == "MAT_FLANN") {
@@ -155,6 +155,49 @@ namespace {
         }
 
         return nullptr;
+    }
+
+}
+
+namespace {
+
+    void
+    matchKeypointsNearestNeighbor(const cv::Ptr<cv::DescriptorMatcher> &matcher, cv::Mat &descSource, cv::Mat &descRef,
+                                  std::vector<cv::DMatch> &matches) {
+        matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
+    }
+
+    void
+    matchKeypointsKNearestNeighbor(const cv::Ptr<cv::DescriptorMatcher> &matcher, cv::Mat &descSource, cv::Mat &descRef,
+                                   std::vector<cv::DMatch> &matches) {
+        // Specifically, k = 2.
+        std::vector<std::vector<cv::DMatch>> nearestNeighbors;
+        matcher->knnMatch(descSource, descRef, nearestNeighbors, 2);
+
+        // Apply distance ratio test.
+        const auto minDescDistRatio = 0.8; // Lowe's magic number
+        for (auto &pair : nearestNeighbors) {
+            if (pair.size() < 2) {
+                continue;
+            } else if (pair[0].distance < (minDescDistRatio * pair[1].distance)) {
+                matches.push_back(pair[0]);
+            }
+        }
+        std::cout << "Kept " << matches.size() << " / " << nearestNeighbors.size() << " keypoints" << std::endl;
+    }
+
+    void
+    matchKeypoints(const std::string &selectorType, const cv::Ptr<cv::DescriptorMatcher> &matcher, cv::Mat &descSource,
+                   cv::Mat &descRef, std::vector<cv::DMatch> &matches) {
+        if (selectorType == "SEL_NN") { // nearest neighbor (best match)
+            matchKeypointsNearestNeighbor(matcher, descSource, descRef, matches);
+            return;
+        } else if (selectorType == "SEL_KNN") { // k nearest neighbors (k=2)
+            matchKeypointsKNearestNeighbor(matcher, descSource, descRef, matches);
+            return;
+        }
+
+        assert(false);
     }
 
 }
@@ -170,12 +213,7 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
     const auto matcher = createDescriptorMatcher(matcherType, crossCheck, isBinaryDescriptor);
 
     // perform matching task
-    if (selectorType == "SEL_NN") { // nearest neighbor (best match)
-        matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
-    } else if (selectorType == "SEL_KNN") { // k nearest neighbors (k=2)
-
-        // ...
-    }
+    matchKeypoints(selectorType, matcher, descSource, descRef, matches);
 }
 
 

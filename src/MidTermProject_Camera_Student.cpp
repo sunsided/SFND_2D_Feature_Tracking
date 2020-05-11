@@ -75,7 +75,7 @@ int main(int argc, const char *argv[]) {
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
         // string detectorType = "SHITOMASI";
-        string detectorType = "BRISK";
+        string detectorType = "AKAZE";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
@@ -97,11 +97,21 @@ int main(int argc, const char *argv[]) {
         //// STUDENT ASSIGNMENT
         //// TASK MP.3 -> only keep keypoints on the preceding vehicle
 
-        // only keep keypoints on the preceding vehicle
+        // only keep keypoints on the preceding vehicle.
+        // NOTE: It absolutely makes sense to limit the search window first, then look for keypoints.
+        //       However, it was a requirement of the project code to do it in this order.
         bool bFocusOnVehicle = true;
         cv::Rect vehicleRect(535, 180, 180, 150);
         if (bFocusOnVehicle) {
-            // ...
+            const auto numKeypointsBefore = keypoints.size();
+            const auto position = std::remove_if(keypoints.begin(), keypoints.end(),
+                    [&vehicleRect](const cv::KeyPoint & kp) {
+                        return !vehicleRect.contains(kp.pt);
+                    });
+            keypoints.erase(position, keypoints.end());
+
+            const auto numKeypointsAfter = keypoints.size();
+            cout << "Keeping " << numKeypointsAfter << " / " << numKeypointsBefore << " keypoints" << endl;
         }
 
         //// EOF STUDENT ASSIGNMENT

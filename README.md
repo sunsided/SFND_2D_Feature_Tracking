@@ -168,3 +168,121 @@ From this, it seems reasonable to settle for either AKAZE, SIFT or BRISK.
 |           |  BRISK      | 64  | 66  | 62  | 66  | 59  | 64  | 64  | 67  | 80  | 59.2 ± 20.4  |
 |           |  FREAK      | 65  | 72  | 64  | 66  | 59  | 59  | 64  | 65  | 79  | 59.3 ± 20.5  |
 |           |  SIFT       | 94  | 95  | 89  | 107 | 99  | 93  | 94  | 115 | 114 | 90 ± 31.2    |
+
+## Execution times
+
+The following table gives the execution times of keypoint detection and description
+as the median time in seconds measured across all video frames.
+
+| detector  |  descriptor | Detector [s] | Descriptor [s] | Total [s] |
+|-----------|-------------|--------------|----------------|-----------|
+| AKAZE     |  AKAZE      | 0.0370       | 0.0321         | 0.0702    |
+|           |  BRIEF      | 0.0409       | 0.0008         | 0.0420    |
+|           |  BRISK      | 0.0400       | 0.1553         | 0.1954    |
+|           |  FREAK      | 0.0368       | 0.0218         | 0.0581    |
+|           |  ORB        | 0.0406       | 0.0058         | 0.0463    |
+|           |  SIFT       | 0.0384       | 0.0139         | 0.0538    |
+|           |             |              |                |           |
+| BRISK     |  BRIEF      | 0.1860       | 0.0006         | 0.1866    |
+|           |  BRISK      | 0.1849       | 0.1566         | 0.3416    |
+|           |  FREAK      | 0.1858       | 0.0214         | 0.2072    |
+|           |  ORB        | 0.1866       | 0.0081         | 0.1948    |
+|           |  SIFT       | 0.1847       | 0.0179         | 0.2030    |
+|           |             |              |                |           |
+| FAST      |  BRIEF      | 0.0009       | 0.0004         | 0.0013    |
+|           |  BRISK      | 0.0009       | 0.1558         | 0.1567    |
+|           |  FREAK      | 0.0009       | 0.0204         | 0.0213    |
+|           |  ORB        | 0.0009       | 0.0030         | 0.0038    |
+|           |  SIFT       | 0.0009       | 0.0104         | 0.0113    |
+|           |             |              |                |           |
+| HARRIS    |  BRIEF      | 0.0105       | 0.0002         | 0.0108    |
+|           |  BRISK      | 0.0071       | 0.1538         | 0.1609    |
+|           |  FREAK      | 0.0063       | 0.0199         | 0.0262    |
+|           |  ORB        | 0.0065       | 0.0022         | 0.0087    |
+|           |  SIFT       | 0.0065       | 0.0085         | 0.0149    |
+|           |             |              |                |           |
+| ORB       |  BRIEF      | 0.0054       | 0.0003         | 0.0058    |
+|           |  BRISK      | 0.0054       | 0.1555         | 0.1610    |
+|           |  FREAK      | 0.0055       | 0.0202         | 0.0259    |
+|           |  ORB        | 0.0054       | 0.0083         | 0.0137    |
+|           |  SIFT       | 0.0055       | 0.0201         | 0.0255    |
+|           |             |              |                |           |
+| SHITOMASI |  BRIEF      | 0.0140       | 0.0011         | 0.0151    |
+|           |  BRISK      | 0.0122       | 0.1836         | 0.1958    |
+|           |  FREAK      | 0.0082       | 0.0202         | 0.0284    |
+|           |  ORB        | 0.0124       | 0.0034         | 0.0156    |
+|           |  SIFT       | 0.0081       | 0.0092         | 0.0173    |
+|           |             |              |                |           |
+| SIFT      |  BRIEF      | 0.0732       | 0.0007         | 0.0739    |
+|           |  BRISK      | 0.0723       | 0.1483         | 0.2212    |
+|           |  FREAK      | 0.0734       | 0.0207         | 0.0944    |
+|           |  SIFT       | 0.0554       | 0.0455         | 0.1013    |
+
+From each block, we will now only keep the two highest-performing (lowest duration)
+option. This gives:
+
+| detector  |  descriptor | Detector [s] | Descriptor [s] | Total [s] |
+|-----------|-------------|--------------|----------------|-----------|
+| AKAZE     |  BRIEF      | 0.0409       | 0.0008         | 0.0420    |
+|           |  ORB        | 0.0406       | 0.0058         | 0.0463    |
+|           |             |              |                |           |
+| BRISK     |  BRIEF      | 0.1860       | 0.0006         | 0.1866    |
+|           |  ORB        | 0.1866       | 0.0081         | 0.1948    |
+|           |             |              |                |           |
+| FAST      |  BRIEF      | 0.0009       | 0.0004         | 0.0013    |
+|           |  ORB        | 0.0009       | 0.0030         | 0.0038    |
+|           |             |              |                |           |
+| HARRIS    |  BRIEF      | 0.0105       | 0.0002         | 0.0108    |
+|           |  ORB        | 0.0065       | 0.0022         | 0.0087    |
+|           |             |              |                |           |
+| ORB       |  BRIEF      | 0.0054       | 0.0003         | 0.0058    |
+|           |  ORB        | 0.0054       | 0.0083         | 0.0137    |
+|           |             |              |                |           |
+| SHITOMASI |  BRIEF      | 0.0140       | 0.0011         | 0.0151    |
+|           |  ORB        | 0.0124       | 0.0034         | 0.0156    |
+|           |             |              |                |           |
+| SIFT      |  BRIEF      | 0.0732       | 0.0007         | 0.0739    |
+|           |  FREAK      | 0.0734       | 0.0207         | 0.0944    |
+
+It is pretty clear that BRIEF and ORB are the two options to look at when it comes
+to speed; in the case of SIFT, where ORB doesn't work, the second-best option is FREAK.
+It is noteworthy that for the Harris detector, ORB is the faster option, whereas
+in any other hase, BRIEF outperforms ORB slightly in total. It is also apparent
+that the total duration is massively governed by the detection step whereas
+the keypoint description generally doesn't matter much.
+
+## Detector / Descriptor combination
+
+From the above numbers we find that
+
+- FAST keypoints with BRIEF descriptors outperform every other combination by
+  a large margin. This combination generated around 100 keypoint matches
+  on average on the tracked car alone. However, FAST uses a fixed-size window
+  which may make it problematic when scale changes a lot. If we sample pictures
+  at a high enough rate, this may not be much of an issue.
+- FAST keypoints with ORB descriptors are next in line with mainly the same arguments.
+  However, ORB keypoints tend to get relatively large in size, which may be inappropriate
+  for tracking closeup objects.
+
+Then,
+
+- ORB keypoints with a BRIEF detector are reasonably fast, but only generate about
+  half the number of keypoints per frame on the tracked car.  
+- Interestingly, the Harris corner detector with a naively implemented (somewhat O(n²)-y)
+  non-maximum suppression algorithm performs in an outstanding way - however,
+  the Harris detector only yielded about 30 keypoints per frame, which may ultimately be
+  too few if the conditions get rough (light changes, perspective shifts, etc.).
+
+Given that we are building a collision avoidance system, time is crucial. At high speeds
+or in drastic deceleration scenarios, being able to process the environment faster makes
+all the difference. Given that even a constant acceleration model of movement is an
+oversimplification, being able to run ten times the number of measurements will help
+to make the right decisions.
+
+As such, the recommendations are the following:
+
+- FAST with descriptors,
+- FAST with ORB descriptors (or both), as well as
+- ORB with BRIEF descriptors
+
+are candidates worth looking at.

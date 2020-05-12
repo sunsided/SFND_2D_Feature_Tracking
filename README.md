@@ -81,6 +81,11 @@ during non-maximum suppression.
 | Average  | 117.9 ± 4.8 | 28.4 ± 4.3 | 149.1 ± 5.0 | 276.2 ± 12.0 | 116.1 ± 12.8 | 167.0 ± 8.1 | 138.6 ± 8.9 |
 | Rank     | 5           | 7          | **3**       | **1**        | 6            | **2**       | 4           |
 
+The detectors are ranked in descending order of number of keypoints created. The intuition here is
+that the more (meaningful) descriptors a detector is able to create, the more exact our understanding
+of the world will be. It is important to mention however that these numbers are the number of keypoints
+prior to matching.
+
 ### Neighbourhood sizes
 
 The neighbourhood size describes the diameter across each keypoint location that was considered
@@ -117,3 +122,51 @@ It is not obvious how to rank these results, although there are a few intuitions
   for keypoints across drastic image changes, but are likely to sacrifice position accuracy.
 
 From this, it seems reasonable to settle for either AKAZE, SIFT or BRISK.
+
+## Number of matches
+
+### Shi-Tomasi
+
+| Detector | #0→1 | #1→2 | #2→3 | #3→4 | #4→5 | #5→6 | #6→7 | #7→8 | #8→9 |   | Average     | Rank |
+|----------|------|------|------|------|------|------|------|------|------|---|-------------|------|
+| BRISK    | 95   | 88   | 80   | 90   | 82   | 79   | 85   | 86   | 82   |   | 85.2 ± 4.9  | 4    |
+| BRIEF    | 115  | 111  | 104  | 101  | 102  | 102  | 100  | 109  | 100  |   | 104.8 ± 5.1 | 2    |
+| ORB      | 104  | 103  | 100  | 102  | 103  | 98   | 98   | 102  | 97   |   | 100.7 ± 2.4 | 3    |
+| FREAK    | 86   | 90   | 86   | 88   | 86   | 80   | 81   | 86   | 85   |   | 85.3 ± 2.9  | 5    |
+| AKAZE    | -    | -    | -    | -    | -    | -    | -    | -    | -    |   | -           | -    |
+| SIFT     | 115  | 113  | 107  | 109  | 104  | 105  | 103  | 113  | 103  |   | 108 ± 4.4   | 1    |
+
+### Harris
+
+| Detector | #0→1 | #1→2 | #2→3 | #3→4 | #4→5 | #5→6 | #6→7 | #7→8 | #8→9 |   | Average    | Rank |
+|----------|------|------|------|------|------|------|------|------|------|---|------------|------|
+| BRISK    | 18   | 17   | 21   | 22   | 24   | 20   | 23   | 29   | 27   |   | 22.3 ± 3.7 | 4    |
+| BRIEF    | 20   | 22   | 26   | 25   | 29   | 24   | 25   | 32   | 24   |   | 25.2 v 3.6 | 3    |
+| ORB      | 19   | 20   | 25   | 25   | 29   | 25   | 26   | 33   | 26   |   | 25.3 ± 4.0 | 2    |
+| FREAK    | 17   | 20   | 21   | 19   | 22   | 27   | 22   | 27   | 24   |   | 22.1 ± 3.2 | 5    |
+| AKAZE    | -    | -    | -    | -    | -    | -    | -    | -    | -    |   | -          | -    |
+| SIFT     | 20   | 22   | 27   | 24   | 31   | 28   | 25   | 34   | 29   |   | 26.7 ± 4.2 | 1    |
+
+### FAST
+
+| Detector | #0→1 | #1→2 | #2→3 | #3→4 | #4→5 | #5→6 | #6→7 | #7→8 | #8→9 |   | Average     | Rank |
+|----------|------|------|------|------|------|------|------|------|------|---|-------------|------|
+| BRISK    | 97   | 104  | 101  | 98   | 85   | 107  | 107  | 100  | 100  |   | 99.9 ± 6.3  | 4    |
+| BRIEF    | 119  | 130  | 118  | 126  | 108  | 123  | 131  | 125  | 119  |   | 122.1 ± 6.7 | 2    |
+| ORB      | 122  | 122  | 115  | 129  | 107  | 120  | 126  | 122  | 118  |   | 120.1 ± 6.0 | 3    |
+| FREAK    | 98   | 99   | 91   | 98   | 85   | 99   | 102  | 101  | 105  |   | 97.6 ± 5.7  | 5    |
+| AKAZE    | -    | -    | -    | -    | -    | -    | -    | -    | -    |   | -           | -    |
+| SIFT     | 132  | 131  | 126  | 138  | 135  | 136  | 135  | 133  | 120  |   | 132.8 ± 5.3 | 1    |
+
+
+
+
+
+| Detector | #0→1 | #1→2 | #2→3 | #3→4 | #4→5 | #5→6 | #6→7 | #7→8 | #8→9 |   | Average | Rank |
+|----------|------|------|------|------|------|------|------|------|------|---|---------|------|
+| BRISK    |      |      |      |      |      |      |      |      |      |   |         |      |
+| BRIEF    |      |      |      |      |      |      |      |      |      |   |         |      |
+| ORB      |      |      |      |      |      |      |      |      |      |   |         |      |
+| FREAK    |      |      |      |      |      |      |      |      |      |   |         |      |
+| AKAZE    |      |      |      |      |      |      |      |      |      |   |         |      |
+| SIFT     |      |      |      |      |      |      |      |      |      |   |         |      |

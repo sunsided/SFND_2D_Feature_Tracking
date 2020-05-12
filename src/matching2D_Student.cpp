@@ -169,7 +169,7 @@ namespace {
 
     void
     matchKeypointsKNearestNeighbor(const cv::Ptr<cv::DescriptorMatcher> &matcher, cv::Mat &descSource, cv::Mat &descRef,
-                                   std::vector<cv::DMatch> &matches) {
+                                   std::vector<cv::DMatch> &matches, bool verbose) {
         // Specifically, k = 2.
         std::vector<std::vector<cv::DMatch>> nearestNeighbors;
         matcher->knnMatch(descSource, descRef, nearestNeighbors, 2);
@@ -183,17 +183,20 @@ namespace {
                 matches.push_back(pair[0]);
             }
         }
-        std::cout << "Kept " << matches.size() << " / " << nearestNeighbors.size() << " keypoints" << std::endl;
+
+        if (verbose) {
+            std::cout << "Kept " << matches.size() << " / " << nearestNeighbors.size() << " keypoints" << std::endl;
+        }
     }
 
     void
     matchKeypoints(const std::string &selectorType, const cv::Ptr<cv::DescriptorMatcher> &matcher, cv::Mat &descSource,
-                   cv::Mat &descRef, std::vector<cv::DMatch> &matches) {
+                   cv::Mat &descRef, std::vector<cv::DMatch> &matches, bool verbose) {
         if (selectorType == "SEL_NN") { // nearest neighbor (best match)
             matchKeypointsNearestNeighbor(matcher, descSource, descRef, matches);
             return;
         } else if (selectorType == "SEL_KNN") { // k nearest neighbors (k=2)
-            matchKeypointsKNearestNeighbor(matcher, descSource, descRef, matches);
+            matchKeypointsKNearestNeighbor(matcher, descSource, descRef, matches, verbose);
             return;
         }
 
@@ -206,33 +209,29 @@ namespace {
 void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::KeyPoint> &kPtsRef,
                       cv::Mat &descSource, cv::Mat &descRef, std::vector<cv::DMatch> &matches,
                       const std::string &descriptorType, const std::string &matcherType,
-                      const std::string &selectorType) {
+                      const std::string &selectorType, bool verbose) {
     // configure matcher
     const auto crossCheck = false;
     const auto isBinaryDescriptor = descriptorType == "DES_BINARY";
     const auto matcher = createDescriptorMatcher(matcherType, crossCheck, isBinaryDescriptor);
 
     // perform matching task
-    matchKeypoints(selectorType, matcher, descSource, descRef, matches);
+    matchKeypoints(selectorType, matcher, descSource, descRef, matches, verbose);
 }
 
 
 // Use one of several types of state-of-art descriptors to uniquely identify keypoints
 void describeKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descriptors,
-                       const std::string &descriptorType) {
+                       const std::string &descriptorType, bool verbose) {
     const auto extractor = createDescriptorExtractor(descriptorType);
     assert(extractor != nullptr);
 
-    auto t = (double) cv::getTickCount();
     extractor->compute(img, keypoints, descriptors);
-
-    t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
-    std::cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0 << " ms" << std::endl;
 }
 
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
-void detectKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis) {
+void detectKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis, bool verbose) {
     // compute detector parameters based on image size
     int blockSize = 4;       //  size of an average block for computing a derivative covariation matrix over each pixel neighborhood
     double maxOverlap = 0.0; // max. permissible overlap between two features in %
@@ -243,7 +242,6 @@ void detectKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img
     double k = 0.04;
 
     // Apply corner detection
-    auto t = (double) cv::getTickCount();
     std::vector<cv::Point2f> corners;
     cv::goodFeaturesToTrack(img, corners, maxCorners, qualityLevel, minDistance, cv::Mat(), blockSize, false, k);
 
@@ -256,10 +254,6 @@ void detectKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img
         keypoints.push_back(newKeyPoint);
     }
 
-    t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
-    std::cout << "Shi-Tomasi detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms"
-              << std::endl;
-
     // visualize results
     if (bVis) {
         cv::Mat visImage = img.clone();
@@ -271,9 +265,7 @@ void detectKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img
     }
 }
 
-void detectKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis) {
-    auto t = (double) cv::getTickCount();
-
+void detectKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis, bool verbose) {
     const auto blockSize = 4;
     const auto apertureSize = 3;
     const auto k = 0.04;
@@ -333,10 +325,6 @@ void detectKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, b
         }
     }
 
-    t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
-    std::cout << "Harris detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms"
-              << std::endl;
-
     if (bVis) {
         std::string windowName = "Harris detector results";
         cv::namedWindow(windowName);
@@ -346,16 +334,11 @@ void detectKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, b
 }
 
 void
-detectKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, const std::string &detectorType, bool bVis) {
+detectKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, const std::string &detectorType, bool bVis, bool verbose) {
     const auto detector = createDetector(detectorType);
     assert(detector != nullptr);
 
-    auto t = (double) cv::getTickCount();
     detector->detect(img, keypoints);
-
-    t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
-    std::cout << detectorType + " detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms"
-              << std::endl;
 
     if (bVis) {
         cv::Mat visImage = img.clone();

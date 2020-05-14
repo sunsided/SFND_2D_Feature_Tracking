@@ -281,8 +281,8 @@ to make the right decisions.
 
 As such, the recommendations are the following:
 
-- FAST with descriptors,
+- FAST with BRIEF descriptors,
 - FAST with ORB descriptors (or both), as well as
 - ORB with BRIEF descriptors
 
-are candidates worth looking at.
+are candidates worth looking at. ORB/ORB, although it literally consists of FAST and BRIEF, didn't make it.

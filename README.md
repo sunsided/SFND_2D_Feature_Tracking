@@ -267,7 +267,7 @@ From the above numbers we find that
 Then,
 
 - ORB keypoints with a BRIEF detector are reasonably fast, but only generate about
-  half the number of keypoints per frame on the tracked car.  
+  half the number of keypoints per frame on the tracked car.
 - Interestingly, the Harris corner detector with a naively implemented (somewhat O(n²)-y)
   non-maximum suppression algorithm performs in an outstanding way - however,
   the Harris detector only yielded about 30 keypoints per frame, which may ultimately be
